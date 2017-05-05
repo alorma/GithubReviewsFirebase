@@ -38,20 +38,12 @@ function processRequest(req, res) {
 function sendReviewToDatabase(rState, rUser, review) {
 	if (rState !== 'pending') {
 		var date = moment(review.submitted_at);
-		review['user'] = {};
-		review['_links'] = {};
-		review['commit_id'] = {};
-		review['submitted_at'] = {};
 
 		var day   = date.format('DD');
 		var month = date.format('MM');
 		var year  = date.format('YYYY');
 
-		var dayRef = admin.database().ref(year + '-' + month + '-' + day);
-
-		dayRef.child('totalCount').transaction(function(count) {
-			return (count || 0) + 1;
-		});
+		var dayRef = admin.database().ref('reviews').child(year + '-' + month + '-' + day);
 
 		var reviewStateRef = dayRef.child(rState);
 
@@ -59,14 +51,22 @@ function sendReviewToDatabase(rState, rUser, review) {
 			return (count || 0) + 1;
 		});
 
+		var userObject = {
+			login: rUser.login,
+			avatar: rUser.avatar_url
+		};
+		
 		var userRef = reviewStateRef.child(rUser.login);
-
 		userRef.child('login').set(rUser.login);
 		userRef.child('avatar').set(rUser.avatar_url);
 
-		var reviewRef = userRef.child('reviews').push();
+		var reviewObject = {
+			url: review.pull_request_url,
+			id: review.id,
+			body: review.body
+		};
 
-		reviewRef.set(review);
+		userRef.child('reviews').push().set(reviewObject);
 	}
 }
 

@@ -3,25 +3,23 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Welcome to Firebase Hosting</title>
+    <title>Welcome to Github reviewers log</title>
 
-    <!-- update the version number as needed -->
-    <script defer src="/__/firebase/3.9.0/firebase-app.js"></script>
-    <!-- include only the Firebase features as you need -->
-    <script defer src="/__/firebase/3.9.0/firebase-auth.js"></script>
-    <script defer src="/__/firebase/3.9.0/firebase-database.js"></script>
-    <script defer src="/__/firebase/3.9.0/firebase-messaging.js"></script>
-    <script defer src="/__/firebase/3.9.0/firebase-storage.js"></script>
-    <!-- initialize the SDK after all desired features are loaded -->
-    <script defer src="/__/firebase/init.js"></script>
+    <script src="/__/firebase/3.9.0/firebase-app.js"></script>
+    <script src="/__/firebase/3.9.0/firebase-auth.js"></script>
+    <script src="/__/firebase/3.9.0/firebase-database.js"></script>
+    <script src="/__/firebase/init.js"></script>
 
     <style media="screen">
       body { background: #ECEFF1; color: rgba(0,0,0,0.87); font-family: Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; }
-      #message { background: white; max-width: 360px; margin: 100px auto 16px; padding: 32px 24px; border-radius: 3px; }
+      #message { background: white; max-width: 560px; margin: 100px auto 16px; padding: 32px 24px; border-radius: 3px; }
       #message h2 { color: #ffa100; font-weight: bold; font-size: 16px; margin: 0 0 8px; }
       #message h1 { font-size: 22px; font-weight: 300; color: rgba(0,0,0,0.6); margin: 0 0 16px;}
       #message p { line-height: 140%; margin: 16px 0 24px; font-size: 14px; }
       #message a { display: block; text-align: center; background: #039be5; text-transform: uppercase; text-decoration: none; color: white; padding: 16px; border-radius: 4px; }
+      #sign-in-button a { display: block; text-align: center; background: #3F51B5; text-transform: uppercase; text-decoration: none; color: white; padding: 16px; border-radius: 4px; }
+      #content-list ul {list-style-type: none;}
+      #content-list ul li {background: #E0E0E0; display: block; box-shadow: 0 1px 2px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);  padding: 16px; border-radius: 2px; border-color: #ECEFF1;}
       #message, #message a { box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24); }
       #load { color: rgba(0,0,0,0.4); text-align: center; font-size: 13px; }
       @media (max-width: 600px) {
@@ -30,35 +28,91 @@
       }
     </style>
   </head>
+
   <body>
     <div id="message">
-      <h2>Welcome</h2>
-      <h1>Firebase Hosting Setup Complete</h1>
-      <p>You're seeing this because you've successfully setup Firebase Hosting. Now it's time to go build something extraordinary!</p>
-      <a target="_blank" href="https://firebase.google.com/docs/hosting/">Open Hosting Documentation</a>
+      <div id="content">
+          <ul id="content-list">
+
+          </li>
+      </div>
+      <a id="sign-in-button">Sign-In</a>
     </div>
-    <p id="load">Firebase SDK Loading&hellip;</p>
+    <p id="load"/>
 
     <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
-        // // The Firebase SDK is initialized and available here!
-        //
-        // firebase.auth().onAuthStateChanged(user => { });
-        // firebase.database().ref('/path/to/ref').on('data', snapshot => { });
-        // firebase.messaging().requestPermission().then(() => { });
-        // firebase.storage().ref('/path/to/ref').getDownloadURL().then(() => { });
-        //
-        // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
+      var signInButton = document.getElementById('sign-in-button');
 
-        try {
-          let app = firebase.app();
-          let features = ['auth', 'database', 'messaging', 'storage'].filter(feature => typeof app[feature] === 'function');
-          document.getElementById('load').innerHTML = `Firebase SDK loaded with ${features.join(', ')}`;
-        } catch (e) {
-          console.error(e);
-          document.getElementById('load').innerHTML = 'Error loading the Firebase SDK, check the console.';
-        }
+      window.addEventListener('load', function() {
+        signInButton.addEventListener('click', function() {
+          var provider = new firebase.auth.GoogleAuthProvider();
+          firebase.auth().signInWithPopup(provider);
+        });
+
+        firebase.auth().onAuthStateChanged(user => {
+          if (user) {
+            signInButton.style.visibility = "hidden"; 
+
+            var database = firebase.database();
+            var reviewsRef = database.ref('reviews/');
+
+            reviewsRef.once('value', function(snapshot) {
+              var containerElement = document.getElementById('content-list');
+              while (containerElement.firstChild) {
+                  containerElement.removeChild(containerElement.firstChild);
+              }
+
+              snapshot.forEach(function(childSnapshot) {
+                var childKey = childSnapshot.key;
+                var childData = childSnapshot.val();
+                var div = document.createElement('li')
+                
+                var approvedText = '';
+                if (childData.approved) {
+                  var count = childData.approved.count;
+                  if (count == 1) {
+                    approvedText = '1 <b>approved</b> PR that day';
+                  } else if (count > 1) {
+                    approvedText = count + ' <b>approved</b> PRs that day';
+                  } else {
+                    approvedText = 'No <b>approved</b> PRs that day';
+                  }
+                }
+
+                var changeText = '';
+                if (childData.changes_requested) {
+                  var count = childData.changes_requested.count;
+                  if (count == 1) {
+                    changeText = '1 <b>requested changes</b> PR that day';
+                  } else if (count > 1) {
+                    changeText = count + ' <b>requested changes</b> PRs that day';
+                  } else {
+                    changeText = 'No <b>requested changes</b> PRs that day';
+                  }
+                }
+
+                var commentedText = '';
+                if (childData.commented) {
+                  var count = childData.commented.count;
+                  if (count == 1) {
+                    commentedText = '1 <b>reviewd</b> PR that day';
+                  } else if (count > 0) {
+                    commentedText = count + ' <b>reviewd</b> PRs that day';
+                  } else {
+                    commentedText = 'No <b>reviewd</b> PRs that day';
+                  }
+                }
+
+                div.innerHTML = '<b>' + childKey + '</b>' + ': '
+                    + '<p>' + approvedText + '</p>' 
+                    + '<p>' + changeText + '</p>' 
+                    + '<p>' + commentedText + '</p>';
+
+                containerElement.appendChild(div);
+              });
+            });
+          }
+        });
       });
     </script>
   </body>
