@@ -28,11 +28,15 @@ exports.githubWebhook = functions.https.onRequest((req, res) => {
 
 function processRequest(req, res) {
 	var payload = req.body;
-	var review = payload.review;
-	var user = review.user;
+	if (payload.review) {
+		var review = payload.review;
+		var user = review.user;
 
-	sendResponseToGithub(res, user, review);
-	sendReviewToDatabase(review.state, user, review);
+		sendResponseToGithub(res, user, review);
+		sendReviewToDatabase(review.state, user, review);
+	} else {
+		res.status(200).send('Not PullRequest Review');
+	}
 }
 
 function sendReviewToDatabase(rState, rUser, review) {

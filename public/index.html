@@ -89,17 +89,26 @@
                   } else {
                     changeText = 'No <b>requested changes</b> PRs that day';
                   }
+                } else if (childData.rejected) {
+                  var count = childData.rejected.count;
+                  if (count == 1) {
+                    changeText = '1 <b>requested changes</b> PR that day';
+                  } else if (count > 1) {
+                    changeText = count + ' <b>requested changes</b> PRs that day';
+                  } else {
+                    changeText = 'No <b>requested changes</b> PRs that day';
+                  }
                 }
 
                 var commentedText = '';
                 if (childData.commented) {
                   var count = childData.commented.count;
                   if (count == 1) {
-                    commentedText = '1 <b>reviewd</b> PR that day';
+                    commentedText = '1 <b>reviewed</b> PR that day';
                   } else if (count > 0) {
-                    commentedText = count + ' <b>reviewd</b> PRs that day';
+                    commentedText = count + ' <b>reviewed</b> PRs that day';
                   } else {
-                    commentedText = 'No <b>reviewd</b> PRs that day';
+                    commentedText = 'No <b>reviewed</b> PRs that day';
                   }
                 }
 
