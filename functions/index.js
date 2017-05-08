@@ -31,9 +31,10 @@ function processRequest(req, res) {
 	if (payload.review) {
 		var review = payload.review;
 		var user = review.user;
-
-		sendResponseToGithub(res, user, review);
-		sendReviewToDatabase(review.state, user, review);
+		if (user.login != "service-engprod") {
+			sendResponseToGithub(res, user, review);
+			sendReviewToDatabase(review.state, user, review);
+		}
 	} else {
 		res.status(200).send('Not PullRequest Review');
 	}
@@ -49,9 +50,13 @@ function sendReviewToDatabase(rState, rUser, review) {
 
 		var dayRef = admin.database().ref('reviews').child(year + '-' + month + '-' + day);
 
-		var reviewStateRef = dayRef.child(rState);
+		var userRef = dayRef.child(rUser.login);
 
-		reviewStateRef.child('count').transaction(function(count) {
+		var stateName = rState;
+		if (rState == 'rejected') {
+			stateName = 'changes_requested';
+		}
+		userRef.child(stateName + '_count').transaction(function(count) {
 			return (count || 0) + 1;
 		});
 
@@ -59,18 +64,8 @@ function sendReviewToDatabase(rState, rUser, review) {
 			login: rUser.login,
 			avatar: rUser.avatar_url
 		};
-		
-		var userRef = reviewStateRef.child(rUser.login);
 		userRef.child('login').set(rUser.login);
 		userRef.child('avatar').set(rUser.avatar_url);
-
-		var reviewObject = {
-			url: review.pull_request_url,
-			id: review.id,
-			body: review.body
-		};
-
-		userRef.child('reviews').push().set(reviewObject);
 	}
 }
 
