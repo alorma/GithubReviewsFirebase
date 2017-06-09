@@ -1,6 +1,7 @@
 var containerElement = document.getElementById('content');
 var signInButton = document.getElementById('sign-in-button');
 var dateSelect = document.getElementById('dates_select');
+var repoSelect = document.getElementById('repo_select');
 var usersData = document.getElementById('user_data_body');
 
 window.addEventListener('load', function() {
@@ -20,29 +21,67 @@ firebase.auth().onAuthStateChanged(user => {
 });
 
 function onUserLoaded() {
-
   var database = firebase.database();
-  var reviewsRef = database.ref('reviews/');
+  var reposRef = database.ref('repos/');
 
-  reviewsRef.once('value', function(snapshot) {
-    loadDates(reviewsRef, snapshot);
+  reposRef.once('value', function(snapshot) {
+    onReposLoaded(snapshot);
   });
 }
 
-function loadDates(reviewsRef, snapshot) {
+function onReposLoaded(snapshot) {
+  var used = false;
   snapshot.forEach(function(childSnapshot) {
-      var dateTitleDiv = document.createElement('option');
-      dateTitleDiv.setAttribute("value", childSnapshot.key)
-      dateTitleDiv.innerHTML = childSnapshot.key;
-      dateSelect.appendChild(dateTitleDiv);
+      var repoTitleOption = document.createElement('option');
+      repoTitleOption.setAttribute("value", childSnapshot.key)
+      repoTitleOption.innerHTML = childSnapshot.key;
+      repoSelect.appendChild(repoTitleOption);
+      if (!used) {
+        onRepoSelected(childSnapshot.key);
+        used = true;
+      }
   });
-  containerElement.appendChild(dateSelect);
+}
+
+function onRepoSelected() {
+  var selectedRepoValue = repoSelect.value;
+  onRepoSelected(selectedRepoValue);
+}
+
+function onRepoSelected(repoKey) {
+  var database = firebase.database();
+  var reviewsRef = database.ref("repos/").child(repoKey).child('reviews/');
+
+  reviewsRef.once('value', function(snapshot) {
+    loadDates(snapshot);
+  });
+}
+
+function loadDates(snapshot) {
+  var used = false;
+  snapshot.forEach(function(childSnapshot) {
+      var dateTitleOption = document.createElement('option');
+      dateTitleOption.setAttribute("value", childSnapshot.key)
+      dateTitleOption.innerHTML = childSnapshot.key;
+      dateSelect.appendChild(dateTitleOption);
+      if (!used) {
+        onDateSelected(childSnapshot.key);
+        used = true;
+      }
+  });
 }
 
 function onDateSelected() {
-  var selectedDateValue = dateSelect.value;
+  onDateSelected(selectedDateValue)
+}
+
+function onDateSelected(dateKey) {
   var database = firebase.database();
-  database.ref('reviews/').child(selectedDateValue).once('value', function(userSnapshot) {
+
+  var selectedRepoValue = repoSelect.value;
+  var reviewsRef = database.ref("repos/").child(selectedRepoValue).child('reviews/');
+
+  reviewsRef.child(dateKey).once('value', function(userSnapshot) {
     loadUserData(userSnapshot);
   });
 }
@@ -75,8 +114,8 @@ function addUserDiv(userChildSpanshot) {
   trUser.appendChild(tdApprove);
 
   var tdReject = document.createElement("td");
-  if (userChildData.rejected_count) {
-    tdReject.innerHTML = userChildData.rejected_count;
+  if (userChildData.changes_requested_count) {
+    tdReject.innerHTML = userChildData.changes_requested_count;
   } else {
     tdReject.innerHTML = 0
   }

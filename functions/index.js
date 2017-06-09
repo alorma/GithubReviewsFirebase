@@ -28,27 +28,33 @@ exports.githubWebhook = functions.https.onRequest((req, res) => {
 
 function processRequest(req, res) {
 	var payload = req.body;
-	if (payload.review) {
+	if (payload.review && payload.repository) {
+		var repository = payload.repository;
 		var review = payload.review;
 		var user = review.user;
 		if (user.login != "service-engprod") {
 			sendResponseToGithub(res, user, review);
-			sendReviewToDatabase(review.state, user, review);
+			sendReviewToDatabase(review.state, user, review, repository);
 		}
 	} else {
 		res.status(200).send('Not PullRequest Review');
 	}
 }
 
-function sendReviewToDatabase(rState, rUser, review) {
+function sendReviewToDatabase(rState, rUser, review, repository) {
 	if (rState !== 'pending') {
+		var repo = {
+			id: repository.id,
+			name: repository.owner.login + "_" + repository.name
+		}
+
 		var date = moment(review.submitted_at);
 
 		var day   = date.format('DD');
 		var month = date.format('MM');
 		var year  = date.format('YYYY');
 
-		var dayRef = admin.database().ref('reviews').child(year + '-' + month + '-' + day);
+		var dayRef = admin.database().ref("repos").child(repo.name).child('reviews').child(year + '-' + month + '-' + day);
 
 		var userRef = dayRef.child(rUser.login);
 
