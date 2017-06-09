@@ -45,10 +45,10 @@ function onReposLoaded(snapshot) {
 
 function onRepoSelected() {
   var selectedRepoValue = repoSelect.value;
-  onRepoSelected(selectedRepoValue);
+  onSelectedRepo(selectedRepoValue);
 }
 
-function onRepoSelected(repoKey) {
+function onSelectedRepo(repoKey) {
   var database = firebase.database();
   var reviewsRef = database.ref("repos/").child(repoKey).child('reviews/');
 
@@ -72,10 +72,11 @@ function loadDates(snapshot) {
 }
 
 function onDateSelected() {
-  onDateSelected(selectedDateValue)
+  var selectedDateValue = dateSelect.value;
+  onSelectedDate(selectedDateValue)
 }
 
-function onDateSelected(dateKey) {
+function onSelectedDate(dateKey) {
   var database = firebase.database();
 
   var selectedRepoValue = repoSelect.value;
