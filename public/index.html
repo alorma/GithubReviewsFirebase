@@ -32,8 +32,11 @@
   <body>
     <div id="message">
       <div id="content">
-        <select id="dates_select" onchange="onDateSelected()"></select>
-        <br />
+        <div id="dates">
+            <h2>Select a date...</h2>
+            <select id="dates_select" onchange="onDateSelected()"></select>
+        </div>
+        <br>
         <div id="users_data"></div>
       </div>
       <a id="sign-in-button">Sign-In</a>
